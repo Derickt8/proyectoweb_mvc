@@ -1,252 +1,245 @@
-<div class="calculator-wrapper">
-  <header class="top-nav">
-    <div class="top-nav-content">
-      <div class="brand-container">
-        <div class="brand-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
+<div class="flex w-full flex-col gap-6 p-6 transition-colors duration-300 animate-fadeIn sm:p-10">
+    <div class="flex flex-col justify-between gap-4 border-b border-gray-200 pb-6 dark:border-zinc-800 md:flex-row md:items-center">
+        <div>
+            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                Calculadora de Comisiones
+            </h2>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                Cálculo de comisiones por venta y resumen liquidado por vendedor.
+            </p>
         </div>
-        <span class="brand-title">Comisiones</span>
-      </div>
-
-      <div class="nav-actions">
-        <app-button-create-custom
-          [data]="createButtonSaleConfig"
-          (buttonClick)="openCreateSaleModal()"
-        ></app-button-create-custom>
-      </div>
+        <div class="flex items-center gap-3">
+            <app-button-create-custom
+                [data]="createButtonSaleConfig"
+                (buttonClick)="openCreateSaleModal()">
+            </app-button-create-custom>
+        </div>
     </div>
-  </header>
 
-  <main class="main-container">
-    <section class="calculator-card">
-      <div class="calculator-header">
-        <h1 class="calculator-title">Calculadora de Comisiones</h1>
-        <p class="calculator-subtitle">Gestión y cálculo de comisiones por ventas en base a rangos y reglas aplicadas.</p>
-      </div>
+    <div class="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="flex flex-col items-start justify-between gap-4 border-b border-gray-100 p-6 dark:border-zinc-800/80 lg:flex-row lg:items-center">
+            <div class="inline-flex rounded-2xl bg-gray-100 p-1.5 dark:bg-zinc-800">
+                <button
+                    type="button"
+                    class="rounded-xl px-5 py-2 text-sm font-semibold transition-all cursor-pointer"
+                    [class]="selectedCommissionTab() === 'sales' ? 'bg-white text-gray-900 shadow-sm dark:bg-zinc-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'"
+                    (click)="setCommissionTab('sales')">
+                    Detalle por Venta
+                </button>
+                <button
+                    type="button"
+                    class="rounded-xl px-5 py-2 text-sm font-semibold transition-all cursor-pointer"
+                    [class]="selectedCommissionTab() === 'sellers' ? 'bg-white text-gray-900 shadow-sm dark:bg-zinc-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'"
+                    (click)="setCommissionTab('sellers')">
+                    Resumen por Vendedor
+                </button>
+            </div>
 
-      <form [formGroup]="commissionDateFilterForm" (ngSubmit)="executeSearchCommission()" class="filter-form">
-        <div class="filter-group">
-          <label for="startDate" class="filter-label">Fecha de Inicio:</label>
-          <div class="input-with-icon">
-            <input
-              type="date"
-              id="startDate"
-              class="date-input"
-              formControlName="startDate"
-            />
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <label for="endDate" class="filter-label">Fecha de Fin:</label>
-          <div class="input-with-icon">
-            <input
-              type="date"
-              id="endDate"
-              class="date-input"
-              formControlName="endDate"
-            />
-          </div>
-        </div>
-
-        <div class="filter-action">
-          <button
-            type="submit"
-            class="btn-calculate"
-            [disabled]="isLoadingCommission() || commissionDateFilterForm.invalid"
-          >
-            @if (isLoadingCommission()) {
-              <span class="spinner"></span>
-              <span>Calculando...</span>
-            } @else {
-              <span>Calcular Comisiones</span>
-            }
-          </button>
-        </div>
-      </form>
-
-
-
-      <div class="results-section">
-        <div class="results-header">
-          <h2 class="results-title">Resultados de Comisiones</h2>
-
-          <div class="tab-controls">
-            <button
-              type="button"
-              class="tab-btn"
-              [class.active]="selectedCommissionTab() === 'sales'"
-              (click)="setCommissionTab('sales')"
-            >
-              Detalle por Venta
-            </button>
-            <button
-              type="button"
-              class="tab-btn"
-              [class.active]="selectedCommissionTab() === 'sellers'"
-              (click)="setCommissionTab('sellers')"
-            >
-              Resumen por Vendedor
-            </button>
-          </div>
+            <form [formGroup]="commissionDateFilterForm" (ngSubmit)="executeSearchCommission()" class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Desde:</span>
+                    <input
+                        type="date"
+                        formControlName="startDate"
+                        class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus:border-blue-600 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-200" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Hasta:</span>
+                    <input
+                        type="date"
+                        formControlName="endDate"
+                        class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 shadow-sm transition-all focus:border-blue-600 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-200" />
+                </div>
+                <button
+                    type="submit"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50">
+                    @if (isLoadingCommission()) {
+                        <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    }
+                    <span>Filtrar</span>
+                </button>
+            </form>
         </div>
 
         @if (selectedCommissionTab() === 'sales') {
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th scope="col">ID Venta</th>
-                  <th scope="col">Fecha Venta</th>
-                  <th scope="col">Vendedor</th>
-                  <th scope="col" class="text-right">Monto</th>
-                  <th scope="col" class="text-center">% Regla Aplicada</th>
-                  <th scope="col" class="text-right">Comisión</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (sale of commissionSalesList(); track sale.id) {
-                  <tr>
-                    <td class="font-mono text-xs text-muted">{{ sale.id }}</td>
-                    <td>{{ sale.saleDate | date:'dd/MM/yyyy' }}</td>
-                    <td class="font-medium text-dark">{{ sale.sellerName }}</td>
-                    <td class="text-right font-medium">{{ sale.amount | currency:'USD':'symbol':'1.2-2' }}</td>
-                    <td class="text-center">
-                      <span class="badge-percentage" [class.badge-active]="sale.appliedPercentage > 0">
-                        {{ sale.appliedPercentage | percent:'1.2-2' }}
-                      </span>
-                    </td>
-                    <td class="text-right font-bold text-emerald">
-                      {{ sale.commission | currency:'USD':'symbol':'1.2-2' }}
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="6" class="empty-state">
-                      No se encontraron comisiones para el rango de fechas seleccionado.
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left">
+                    <thead class="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-gray-400">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">ID Venta</th>
+                            <th class="px-6 py-4 font-semibold">Fecha Venta</th>
+                            <th class="px-6 py-4 font-semibold">Vendedor</th>
+                            <th class="px-6 py-4 text-right font-semibold">Monto</th>
+                            <th class="px-6 py-4 text-center font-semibold">% Regla</th>
+                            <th class="px-6 py-4 text-right font-semibold">Comisión</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-zinc-800/50">
+                        @if (isLoadingCommission()) {
+                            <tr>
+                                <td colspan="6" class="px-6 py-16 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="mb-2 h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                                        <p class="text-sm font-medium text-gray-500">Cargando comisiones...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        } @else {
+                            @for (sale of commissionSalesList(); track sale.id) {
+                                <tr class="transition-colors duration-150 hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                    <td class="whitespace-nowrap px-6 py-4 font-mono text-xs text-gray-400">{{ sale.id }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ sale.saleDate | date:'dd/MM/yyyy' }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">{{ sale.sellerName }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-gray-100">{{ sale.amount | currency:'USD':'symbol':'1.2-2' }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-center">
+                                        <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold" [class]="sale.appliedPercentage > 0 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' : 'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-gray-400'">
+                                            {{ sale.appliedPercentage | percent:'1.2-2' }}
+                                        </span>
+                                    </td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                        {{ sale.commission | currency:'USD':'symbol':'1.2-2' }}
+                                    </td>
+                                </tr>
+                            } @empty {
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-500">
+                                        No se encontraron registros de ventas para los filtros seleccionados.
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
 
             @if (totalRecordsCommission() > 0) {
-              <app-paginator-custom
-                [totalRecords]="totalRecordsCommission()"
-                [pageSize]="pageSizeCommission()"
-                [pageIndex]="pageIndexCommission()"
-                [pageSizeOptions]="pageSizeOptionsCommission()"
-                (pageChange)="onPageChangeCommission($event)"
-                (pageSizeChange)="onPageSizeChangeCommission($event)"
-              ></app-paginator-custom>
+                <app-paginator-custom
+                    [totalRecords]="totalRecordsCommission()"
+                    [pageSize]="pageSizeCommission()"
+                    [pageIndex]="pageIndexCommission()"
+                    [pageSizeOptions]="pageSizeOptionsCommission()"
+                    (pageChange)="onPageChangeCommission($event)"
+                    (pageSizeChange)="onPageSizeChangeCommission($event)">
+                </app-paginator-custom>
             }
-          </div>
         }
 
         @if (selectedCommissionTab() === 'sellers') {
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th scope="col">Nombre</th>
-                  <th scope="col" class="text-right">Total Vendido</th>
-                  <th scope="col" class="text-center">% Regla Aplicada</th>
-                  <th scope="col" class="text-right">Comisión</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (summary of commissionSummaryList(); track summary.sellerId) {
-                  <tr>
-                    <td class="font-medium text-dark">{{ summary.sellerName }}</td>
-                    <td class="text-right font-medium">{{ summary.totalSold | currency:'USD':'symbol':'1.2-2' }}</td>
-                    <td class="text-center">
-                      <span class="badge-percentage" [class.badge-active]="summary.appliedPercentage > 0">
-                        {{ summary.appliedPercentage | percent:'1.2-2' }}
-                      </span>
-                    </td>
-                    <td class="text-right font-bold text-emerald">
-                      {{ summary.totalCommission | currency:'USD':'symbol':'1.2-2' }}
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="4" class="empty-state">
-                      No se encontraron comisiones para el rango de fechas seleccionado.
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left">
+                    <thead class="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-gray-400">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">Vendedor</th>
+                            <th class="px-6 py-4 text-right font-semibold">Total Vendido</th>
+                            <th class="px-6 py-4 text-center font-semibold">% Regla Aplicada</th>
+                            <th class="px-6 py-4 text-right font-semibold">Comisión Acumulada</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-zinc-800/50">
+                        @for (summary of commissionSummaryList(); track summary.sellerId) {
+                            <tr class="transition-colors duration-150 hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">{{ summary.sellerName }}</td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-gray-100">{{ summary.totalSold | currency:'USD':'symbol':'1.2-2' }}</td>
+                                <td class="whitespace-nowrap px-6 py-4 text-center">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold" [class]="summary.appliedPercentage > 0 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' : 'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-gray-400'">
+                                        {{ summary.appliedPercentage | percent:'1.2-2' }}
+                                    </span>
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                    {{ summary.totalCommission | currency:'USD':'symbol':'1.2-2' }}
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-sm text-gray-500">
+                                    No se encontraron resúmenes para los filtros seleccionados.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
 
             @if (totalSummaryRecordsCommission() > 0) {
-              <app-paginator-custom
-                [totalRecords]="totalSummaryRecordsCommission()"
-                [pageSize]="summaryPageSizeCommission()"
-                [pageIndex]="summaryPageIndexCommission()"
-                [pageSizeOptions]="pageSizeOptionsCommission()"
-                (pageChange)="onSummaryPageChangeCommission($event)"
-                (pageSizeChange)="onSummaryPageSizeChangeCommission($event)"
-              ></app-paginator-custom>
+                <app-paginator-custom
+                    [totalRecords]="totalSummaryRecordsCommission()"
+                    [pageSize]="summaryPageSizeCommission()"
+                    [pageIndex]="summaryPageIndexCommission()"
+                    [pageSizeOptions]="pageSizeOptionsCommission()"
+                    (pageChange)="onSummaryPageChangeCommission($event)"
+                    (pageSizeChange)="onSummaryPageSizeChangeCommission($event)">
+                </app-paginator-custom>
             }
-          </div>
         }
-      </div>
-    </section>
-  </main>
-
-  @if (isCreateSaleModalOpenCommission()) {
-    <div class="modal-backdrop">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 class="modal-title">Registrar Nueva Venta</h3>
-          <button type="button" class="btn-close" (click)="closeCreateSaleModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-
-        <form [formGroup]="createSaleCommissionForm" (ngSubmit)="handleCreateSale()" class="modal-body">
-          <div class="form-field">
-            <label for="sellerSelect" class="form-label">Seleccionar Vendedor</label>
-            <select id="sellerSelect" formControlName="sellerId" class="form-select">
-              @for (seller of sellerListCommission(); track seller.id) {
-                <option [value]="seller.id">{{ seller.name }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label for="saleDateInput" class="form-label">Fecha de Venta</label>
-            <input type="date" id="saleDateInput" formControlName="saleDate" class="form-input"/>
-          </div>
-
-          <div class="form-field">
-            <label for="amountInput" class="form-label">Monto de Venta ($)</label>
-            <input type="number" step="0.01" min="0.01" id="amountInput" formControlName="amount" class="form-input"/>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn-secondary" (click)="closeCreateSaleModal()">
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              class="btn-primary"
-              [disabled]="isSubmittingSaleCommission() || createSaleCommissionForm.invalid"
-            >
-              @if (isSubmittingSaleCommission()) {
-                <span class="spinner"></span>
-                <span>Guardando...</span>
-              } @else {
-                <span>Guardar Venta</span>
-              }
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
-  }
 </div>
+
+@if (isCreateSaleModalOpenCommission()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fadeIn">
+        <div class="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4 dark:border-zinc-800">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Registrar Nueva Venta</h3>
+                <button
+                    type="button"
+                    class="rounded-xl p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-zinc-800 dark:hover:text-gray-200 transition-colors"
+                    (click)="closeCreateSaleModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form [formGroup]="createSaleCommissionForm" (ngSubmit)="handleCreateSale()" class="mt-6 flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5">
+                    <label for="sellerSelect" class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Vendedor</label>
+                    <select
+                        id="sellerSelect"
+                        formControlName="sellerId"
+                        class="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 shadow-sm transition-all focus:border-blue-600 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-200">
+                        @for (seller of sellerListCommission(); track seller.id) {
+                            <option [value]="seller.id">{{ seller.name }}</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label for="saleDateInput" class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Fecha de Venta</label>
+                    <input
+                        type="date"
+                        id="saleDateInput"
+                        formControlName="saleDate"
+                        class="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 shadow-sm transition-all focus:border-blue-600 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-200" />
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label for="amountInput" class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Monto de Venta ($)</label>
+                    <input
+                        type="number"
+                        id="amountInput"
+                        step="0.01"
+                        placeholder="Ej. 705.00"
+                        formControlName="amount"
+                        class="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 shadow-sm transition-all focus:border-blue-600 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-200" />
+                </div>
+
+                <div class="mt-4 flex justify-end gap-3 border-t border-gray-100 pt-4 dark:border-zinc-800">
+                    <button
+                        type="button"
+                        class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-gray-400 dark:hover:bg-zinc-800 transition-colors"
+                        (click)="closeCreateSaleModal()">
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                        [disabled]="createSaleCommissionForm.invalid || isSubmittingSaleCommission()">
+                        @if (isSubmittingSaleCommission()) {
+                            <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                        }
+                        <span>Guardar Venta</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
