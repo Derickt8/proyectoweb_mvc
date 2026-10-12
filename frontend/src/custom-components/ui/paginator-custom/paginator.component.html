@@ -1,0 +1,33 @@
+<div class="px-4 py-2">
+  <div class="tableResponsive">
+    <div class="mat-form-field-custom">
+      <select [value]="pageSize" (change)="onPageSizeChange($event)" class="page-size-select">
+        @for (option of pageSizeOptions; track $index) {
+          <option [value]="option">{{ option }} / pág.</option>
+        }
+      </select>
+    </div>
+
+    <div class="pagination">
+      <button [disabled]="pageIndex === 1" (click)="goToPage(pageIndex - 1)" class="pagination-button" title="Página anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      @for (page of getPageOptions(); track $index) {
+        <button [disabled]="pageIndex === page" (click)="goToPage(page)" class="pagination-button custom-button" [class.active-page]="pageIndex === page">
+          {{ page }}
+        </button>
+      }
+
+      @if (hasMorePages()) {
+        <button (click)="goToPage(pageIndex + 1)" class="pagination-button custom-button" title="Página siguiente">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      }
+    </div>
+  </div>
+</div>

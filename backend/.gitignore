@@ -1,0 +1,28 @@
+# Compiled output
+/dist
+/build
+
+# Node dependencies
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# Database SQLite files
+*.sqlite
+*.db
+database.sqlite
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDEs
+.idea/
+.vscode/*
+!.vscode/settings.json
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db

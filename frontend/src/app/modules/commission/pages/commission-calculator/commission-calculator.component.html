@@ -1,0 +1,292 @@
+<div class="calculator-wrapper">
+  <header class="top-nav">
+    <div class="top-nav-content">
+      <div class="brand-container">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <span class="brand-title">Comisiones</span>
+      </div>
+
+      <div class="nav-actions">
+        <app-button-create-custom
+          [data]="createButtonSaleConfig"
+          (buttonClick)="openCreateSaleModal()"
+        ></app-button-create-custom>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <section class="calculator-card">
+      <div class="calculator-header">
+        <h1 class="calculator-title">Calculadora de Comisiones</h1>
+        <p class="calculator-subtitle">Gestión y cálculo de comisiones por ventas en base a rangos y reglas aplicadas.</p>
+      </div>
+
+      <form [formGroup]="commissionDateFilterForm" (ngSubmit)="handleCalculateCommissions()" class="filter-form">
+        <div class="filter-group">
+          <label for="startDate" class="filter-label">Fecha de Inicio:</label>
+          <div class="input-with-icon">
+            <input
+              type="date"
+              id="startDate"
+              class="date-input"
+              formControlName="startDate"
+            />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label for="endDate" class="filter-label">Fecha de Fin:</label>
+          <div class="input-with-icon">
+            <input
+              type="date"
+              id="endDate"
+              class="date-input"
+              formControlName="endDate"
+            />
+          </div>
+        </div>
+
+        <div class="filter-action">
+          <button
+            type="submit"
+            class="btn-calculate"
+            [disabled]="isLoadingCommission() || commissionDateFilterForm.invalid"
+          >
+            @if (isLoadingCommission()) {
+              <span class="spinner"></span>
+              <span>Calculando...</span>
+            } @else {
+              <span>Calcular Comisiones</span>
+            }
+          </button>
+        </div>
+      </form>
+
+      @if (metricsCommission()) {
+        <div class="metrics-grid">
+          <app-card-custom
+            title="Total Ventas"
+            [value]="(totalSalesAmountCommission() | currency:'USD':'symbol':'1.2-2') ?? '$0.00'"
+            subtext="Monto bruto facturado"
+            iconBgClass="bg-sky-50"
+            iconClass="text-sky-600"
+          >
+            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+            </svg>
+          </app-card-custom>
+
+          <app-card-custom
+            title="Total Comisiones"
+            [value]="(totalCommissionAmountCommission() | currency:'USD':'symbol':'1.2-2') ?? '$0.00'"
+            subtext="Comisiones calculadas"
+            iconBgClass="bg-emerald-50"
+            iconClass="text-emerald-600"
+          >
+            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </app-card-custom>
+
+          <app-card-custom
+            title="Total Transacciones"
+            [value]="totalSalesCountCommission()"
+            subtext="Ventas en el rango"
+            iconBgClass="bg-amber-50"
+            iconClass="text-amber-600"
+          >
+            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </app-card-custom>
+
+          <app-card-custom
+            title="Vendedores Activos"
+            [value]="activeSellersCountCommission()"
+            subtext="Con ventas registradas"
+            iconBgClass="bg-purple-50"
+            iconClass="text-purple-600"
+          >
+            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </app-card-custom>
+        </div>
+      }
+
+      <div class="results-section">
+        <div class="results-header">
+          <h2 class="results-title">Resultados de Comisiones</h2>
+
+          <div class="tab-controls">
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active]="selectedCommissionTab() === 'sales'"
+              (click)="setCommissionTab('sales')"
+            >
+              Detalle por Venta
+            </button>
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active]="selectedCommissionTab() === 'sellers'"
+              (click)="setCommissionTab('sellers')"
+            >
+              Resumen por Vendedor
+            </button>
+          </div>
+        </div>
+
+        @if (selectedCommissionTab() === 'sales') {
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">ID Venta</th>
+                  <th scope="col">Fecha Venta</th>
+                  <th scope="col">Vendedor</th>
+                  <th scope="col" class="text-right">Monto</th>
+                  <th scope="col" class="text-center">% Regla Aplicada</th>
+                  <th scope="col" class="text-right">Comisión</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (sale of paginatedSalesListCommission(); track sale.saleId) {
+                  <tr>
+                    <td class="font-mono text-xs text-muted">{{ sale.saleId }}</td>
+                    <td>{{ sale.saleDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="font-medium text-dark">{{ sale.sellerName }}</td>
+                    <td class="text-right font-medium">{{ sale.amount | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td class="text-center">
+                      <span class="badge-percentage" [class.badge-active]="sale.appliedPercentage > 0">
+                        {{ sale.appliedPercentage | percent:'1.2-2' }}
+                      </span>
+                    </td>
+                    <td class="text-right font-bold text-emerald">
+                      {{ sale.commission | currency:'USD':'symbol':'1.2-2' }}
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="empty-state">
+                      No se encontraron comisiones para el rango de fechas seleccionado.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            @if (commissionSalesList().length > 0) {
+              <app-paginator-custom
+                [totalRecords]="totalSalesCountCommission()"
+                [pageSize]="pageSizeCommission()"
+                [pageIndex]="pageIndexCommission()"
+                [pageSizeOptions]="[5, 10, 20]"
+                (pageChange)="onPageChangeCommission($event)"
+                (pageSizeChange)="onPageSizeChangeCommission($event)"
+              ></app-paginator-custom>
+            }
+          </div>
+        }
+
+        @if (selectedCommissionTab() === 'sellers') {
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Nombre</th>
+                  <th scope="col" class="text-right">Total Vendido</th>
+                  <th scope="col" class="text-center">% Regla Aplicada</th>
+                  <th scope="col" class="text-right">Comisión</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (summary of commissionSummaryList(); track summary.sellerId) {
+                  <tr>
+                    <td class="font-medium text-dark">{{ summary.sellerName }}</td>
+                    <td class="text-right font-medium">{{ summary.totalSold | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td class="text-center">
+                      <span class="badge-percentage" [class.badge-active]="summary.appliedPercentage > 0">
+                        {{ summary.appliedPercentage | percent:'1.2-2' }}
+                      </span>
+                    </td>
+                    <td class="text-right font-bold text-emerald">
+                      {{ summary.totalCommission | currency:'USD':'symbol':'1.2-2' }}
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="empty-state">
+                      No se encontraron comisiones para el rango de fechas seleccionado.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+
+  @if (isCreateSaleModalOpenCommission()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Registrar Nueva Venta</h3>
+          <button type="button" class="btn-close" (click)="closeCreateSaleModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form [formGroup]="createSaleCommissionForm" (ngSubmit)="handleCreateSale()" class="modal-body">
+          <div class="form-field">
+            <label for="sellerSelect" class="form-label">Seleccionar Vendedor</label>
+            <select id="sellerSelect" formControlName="sellerId" class="form-select">
+              @for (seller of sellerListCommission(); track seller.id) {
+                <option [value]="seller.id">{{ seller.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="saleDateInput" class="form-label">Fecha de Venta</label>
+            <input type="date" id="saleDateInput" formControlName="saleDate" class="form-input"/>
+          </div>
+
+          <div class="form-field">
+            <label for="amountInput" class="form-label">Monto de Venta ($)</label>
+            <input type="number" step="0.01" min="0.01" id="amountInput" formControlName="amount" class="form-input"/>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="closeCreateSaleModal()">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="isSubmittingSaleCommission() || createSaleCommissionForm.invalid"
+            >
+              @if (isSubmittingSaleCommission()) {
+                <span class="spinner"></span>
+                <span>Guardando...</span>
+              } @else {
+                <span>Guardar Venta</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
