@@ -19,10 +19,4 @@ export class CommissionController {
   async findSummariesBySeller(@Query() paginationDto: PaginationDto) {
     return this.commissionService.findSummariesBySeller(paginationDto);
   }
-
-  @Get('metrics')
-  @ApiOperation({ summary: 'Obtener métricas y KPIs para los filtros aplicados' })
-  async getMetrics(@Query('where') where?: string) {
-    return this.commissionService.getMetrics(where);
-  }
 }

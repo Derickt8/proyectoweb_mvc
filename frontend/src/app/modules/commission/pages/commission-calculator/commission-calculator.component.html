@@ -67,58 +67,7 @@
         </div>
       </form>
 
-      @if (metricsCommission()) {
-        <div class="metrics-grid">
-          <app-card-custom
-            title="Total Ventas"
-            [value]="(totalSalesAmountCommission() | currency:'USD':'symbol':'1.2-2') ?? '$0.00'"
-            subtext="Monto bruto facturado"
-            iconBgClass="bg-sky-50"
-            iconClass="text-sky-600"
-          >
-            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
-              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
-            </svg>
-          </app-card-custom>
 
-          <app-card-custom
-            title="Total Comisiones"
-            [value]="(totalCommissionAmountCommission() | currency:'USD':'symbol':'1.2-2') ?? '$0.00'"
-            subtext="Comisiones calculadas"
-            iconBgClass="bg-emerald-50"
-            iconClass="text-emerald-600"
-          >
-            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-          </app-card-custom>
-
-          <app-card-custom
-            title="Total Transacciones"
-            [value]="totalSalesCountCommission()"
-            subtext="Ventas en el rango"
-            iconBgClass="bg-amber-50"
-            iconClass="text-amber-600"
-          >
-            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            </svg>
-          </app-card-custom>
-
-          <app-card-custom
-            title="Vendedores Activos"
-            [value]="activeSellersCountCommission()"
-            subtext="Con ventas registradas"
-            iconBgClass="bg-purple-50"
-            iconClass="text-purple-600"
-          >
-            <svg card-icon xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </app-card-custom>
-        </div>
-      }
 
       <div class="results-section">
         <div class="results-header">

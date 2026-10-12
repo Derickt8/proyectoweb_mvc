@@ -171,57 +171,6 @@ export class CommissionService {
     };
   }
 
-  async getMetrics(where?: any): Promise<{
-    totalSalesAmount: number;
-    totalCommissionAmount: number;
-    totalSalesCount: number;
-    activeSellersCount: number;
-  }> {
-    const parsedWhere = this.parseWhere(where);
-
-    const queryBuilder = this.saleRepository
-      .createQueryBuilder('sale')
-      .leftJoinAndSelect('sale.seller', 'seller');
-
-    if (parsedWhere['startDate'] && parsedWhere['endDate']) {
-      queryBuilder.andWhere('sale.saleDate BETWEEN :startDate AND :endDate', {
-        startDate: parsedWhere['startDate'],
-        endDate: parsedWhere['endDate'],
-      });
-    }
-
-    if (parsedWhere['sellerId']) {
-      queryBuilder.andWhere('sale.sellerId = :sellerId', {
-        sellerId: parsedWhere['sellerId'],
-      });
-    }
-
-    const sales = await queryBuilder.getMany();
-    const rules = await this.ruleRepository.find({
-      order: { minAmount: 'DESC' },
-    });
-
-    let totalSalesAmount = 0;
-    let totalCommissionAmount = 0;
-    const sellerSet = new Set<string>();
-
-    for (const sale of sales) {
-      const amount = Number(sale.amount);
-      totalSalesAmount += amount;
-      sellerSet.add(sale.sellerId);
-
-      const matchingRule = rules.find((r) => amount >= Number(r.minAmount));
-      const appliedPercentage = matchingRule ? Number(matchingRule.percentage) : 0;
-      totalCommissionAmount += amount * appliedPercentage;
-    }
-
-    return {
-      totalSalesAmount: Number(totalSalesAmount.toFixed(2)),
-      totalCommissionAmount: Number(totalCommissionAmount.toFixed(2)),
-      totalSalesCount: sales.length,
-      activeSellersCount: sellerSet.size,
-    };
-  }
 
   private parseWhere(where?: any): Record<string, any> {
     if (!where) return {};

@@ -14,7 +14,6 @@ import { Observable } from 'rxjs';
 import { CommissionService } from '../../../../core/commission/commission.service';
 import {
   Commission,
-  CommissionMetrics,
   CommissionResponse,
   CommissionSummary,
   CommissionSummaryResponse,
@@ -22,7 +21,6 @@ import {
 } from '../../../../core/commission/commission.types';
 import { ButtonCustomType } from '../../../../core/utils/button-custom.type';
 import { ButtonCreateCustomComponent } from '@/custom-components/button-create-custom/button-create-custom.component';
-import { CardCustomComponent } from '@/custom-components/ui/card-custom/card-custom.component';
 import { PaginatorComponent } from '@/custom-components/ui/paginator-custom/paginator.component';
 
 export type CommissionTabType = 'sales' | 'sellers';
@@ -37,7 +35,6 @@ export type CommissionTabType = 'sales' | 'sellers';
     DatePipe,
     PercentPipe,
     ButtonCreateCustomComponent,
-    CardCustomComponent,
     PaginatorComponent,
   ],
   templateUrl: './commission-calculator.component.html',
@@ -55,8 +52,8 @@ export class CommissionCalculatorComponent implements OnInit {
   };
 
   readonly calculateButtonCommissionConfig: ButtonCustomType = {
-    title: 'Calcular Comisiones',
-    icon: 'heroicons_outline:calculator',
+    title: 'Buscar Comisiones',
+    icon: 'heroicons_outline:magnifying-glass',
     class: 'btn-calculate',
   };
 
@@ -76,18 +73,11 @@ export class CommissionCalculatorComponent implements OnInit {
   readonly summaryPageSizeCommission = signal<number>(10);
   readonly totalSummaryRecordsCommission = signal<number>(0);
 
-  readonly metricsCommission = signal<CommissionMetrics | null>(null);
   readonly sellerListCommission = signal<Seller[]>([]);
 
   readonly commissionDateFilterForm = new FormGroup({
-    startDate: new FormControl<string>('2025-05-01', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    endDate: new FormControl<string>('2025-06-30', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
+    startDate: new FormControl<string>(''),
+    endDate: new FormControl<string>(''),
   });
 
   readonly createSaleCommissionForm = new FormGroup({
@@ -99,8 +89,7 @@ export class CommissionCalculatorComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    amount: new FormControl<number>(500, {
-      nonNullable: true,
+    amount: new FormControl<number | null>(null, {
       validators: [Validators.required, Validators.min(0.01)],
     }),
   });
@@ -109,22 +98,6 @@ export class CommissionCalculatorComponent implements OnInit {
     () =>
       this.totalRecordsCommission() > 0 ||
       this.commissionSummaryList().length > 0,
-  );
-
-  readonly totalSalesAmountCommission = computed(
-    () => this.metricsCommission()?.totalSalesAmount ?? 0,
-  );
-
-  readonly totalCommissionAmountCommission = computed(
-    () => this.metricsCommission()?.totalCommissionAmount ?? 0,
-  );
-
-  readonly totalSalesCountCommission = computed(
-    () => this.metricsCommission()?.totalSalesCount ?? 0,
-  );
-
-  readonly activeSellersCountCommission = computed(
-    () => this.metricsCommission()?.activeSellersCount ?? 0,
   );
 
   ngOnInit(): void {
@@ -154,7 +127,6 @@ export class CommissionCalculatorComponent implements OnInit {
       this.summaryPageIndexCommission(),
       this.summaryPageSizeCommission(),
     );
-    this.loadMetricsCommission();
   }
 
   loadCommissions(page: number, limit: number): void {
@@ -200,26 +172,6 @@ export class CommissionCalculatorComponent implements OnInit {
         error: () => {
           this.commissionSummaryList.set([]);
           this.totalSummaryRecordsCommission.set(0);
-        },
-      });
-  }
-
-  loadMetricsCommission(): void {
-    const filterValues = this.commissionDateFilterForm.getRawValue();
-    const where: Record<string, unknown> = {};
-    if (filterValues.startDate && filterValues.endDate) {
-      where['startDate'] = filterValues.startDate;
-      where['endDate'] = filterValues.endDate;
-    }
-
-    this.loadMetrics$(where)
-      .pipe(takeUntilDestroyed(this._destroyRef))
-      .subscribe({
-        next: (metrics) => {
-          this.metricsCommission.set(metrics);
-        },
-        error: () => {
-          this.metricsCommission.set(null);
         },
       });
   }
@@ -272,7 +224,7 @@ export class CommissionCalculatorComponent implements OnInit {
     this.isSubmittingSaleCommission.set(true);
     const formValue = this.createSaleCommissionForm.getRawValue();
 
-    this.createSale$(formValue)
+    this.createSale$(formValue as Partial<Commission>)
       .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: () => {
@@ -300,12 +252,6 @@ export class CommissionCalculatorComponent implements OnInit {
     where: Record<string, unknown>,
   ): Observable<CommissionSummaryResponse> {
     return this._commissionService.findSummariesBySeller(page, limit, where);
-  }
-
-  private loadMetrics$(
-    where: Record<string, unknown>,
-  ): Observable<CommissionMetrics> {
-    return this._commissionService.getMetrics(where);
   }
 
   private loadSellers$(): Observable<Seller[]> {

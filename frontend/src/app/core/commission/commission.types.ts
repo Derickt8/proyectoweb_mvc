@@ -41,10 +41,3 @@ export type CommissionSummaryRow = CommissionSummary & {
 };
 
 export type CommissionSummaryResponse = PaginationResponse<CommissionSummary>;
-
-export type CommissionMetrics = {
-  totalSalesAmount: number;
-  totalCommissionAmount: number;
-  totalSalesCount: number;
-  activeSellersCount: number;
-};

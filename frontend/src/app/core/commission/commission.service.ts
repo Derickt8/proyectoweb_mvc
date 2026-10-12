@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { environment } from '@/environments/environment';
 import {
   Commission,
-  CommissionMetrics,
   CommissionResponse,
   CommissionSummaryResponse,
   Seller,
@@ -64,16 +63,6 @@ export class CommissionService {
       `${this._apiUrl}/by-seller`,
       { params },
     );
-  }
-
-  getMetrics(where: Record<string, unknown> = {}): Observable<CommissionMetrics> {
-    let params = new HttpParams();
-    if (Object.keys(where).length > 0) {
-      params = params.set('where', JSON.stringify(where));
-    }
-    return this._httpClient.get<CommissionMetrics>(`${this._apiUrl}/metrics`, {
-      params,
-    });
   }
 
   getSellers(): Observable<Seller[]> {
