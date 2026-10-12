@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ButtonCustomType } from '../../app/core/commission/commission.types';
+import { ButtonCustomType } from '@/app/core/utils/button-custom.type';
 
 @Component({
   selector: 'app-button-create-custom',

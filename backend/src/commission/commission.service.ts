@@ -1,15 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Sale } from '../sale/entities/sale.entity';
 import { CommissionRule } from '../commission-rule/entities/commission-rule.entity';
-import { CalculateCommissionDto } from './dto/calculate-commission.dto';
-import {
-  CommissionCalculationResponseDto,
-  CommissionMetricsDto,
-  CommissionSaleItemDto,
-  CommissionSellerSummaryDto,
-} from './dto/commission-result.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class CommissionService {
@@ -20,48 +14,117 @@ export class CommissionService {
     private readonly ruleRepository: Repository<CommissionRule>,
   ) {}
 
-  async calculateCommissions(
-    dto: CalculateCommissionDto,
-  ): Promise<CommissionCalculationResponseDto> {
-    const { startDate, endDate } = dto;
+  async findAll(paginationDto: PaginationDto): Promise<{
+    data: any[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortField = 'saleDate',
+      sortOrder = 'desc',
+      where,
+    } = paginationDto;
 
-    const sales = await this.saleRepository.find({
-      where: {
-        saleDate: Between(startDate, endDate),
-      },
-      relations: ['seller'],
-      order: {
-        saleDate: 'ASC',
-      },
-    });
+    const queryBuilder = this.saleRepository
+      .createQueryBuilder('sale')
+      .leftJoinAndSelect('sale.seller', 'seller');
 
+    const parsedWhere = this.parseWhere(where);
+
+    if (parsedWhere['startDate'] && parsedWhere['endDate']) {
+      queryBuilder.andWhere('sale.saleDate BETWEEN :startDate AND :endDate', {
+        startDate: parsedWhere['startDate'],
+        endDate: parsedWhere['endDate'],
+      });
+    }
+
+    if (parsedWhere['sellerId']) {
+      queryBuilder.andWhere('sale.sellerId = :sellerId', {
+        sellerId: parsedWhere['sellerId'],
+      });
+    }
+
+    if (search && search.trim()) {
+      queryBuilder.andWhere('seller.name LIKE :search', {
+        search: `%${search.trim()}%`,
+      });
+    }
+
+    const allowedSortFields = ['saleDate', 'amount', 'id'];
+    const finalSortField = allowedSortFields.includes(sortField)
+      ? `sale.${sortField}`
+      : 'sale.saleDate';
+
+    queryBuilder.orderBy(
+      finalSortField,
+      sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC',
+    );
+
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    const [sales, total] = await queryBuilder.getManyAndCount();
     const rules = await this.ruleRepository.find({
-      order: {
-        minAmount: 'DESC',
-      },
+      order: { minAmount: 'DESC' },
     });
 
-    const detailedSales: CommissionSaleItemDto[] = sales.map((sale) => {
-      const numericAmount = Number(sale.amount);
-      const matchingRule = rules.find(
-        (rule) => numericAmount >= Number(rule.minAmount),
-      );
-      const appliedPercentage = matchingRule
-        ? Number(matchingRule.percentage)
-        : 0;
-      const commission = Number(
-        (numericAmount * appliedPercentage).toFixed(2),
-      );
+    const data = sales.map((sale) => {
+      const amount = Number(sale.amount);
+      const matchingRule = rules.find((r) => amount >= Number(r.minAmount));
+      const appliedPercentage = matchingRule ? Number(matchingRule.percentage) : 0;
+      const commission = Number((amount * appliedPercentage).toFixed(2));
 
       return {
-        saleId: sale.id,
+        id: sale.id,
         saleDate: sale.saleDate,
+        amount,
         sellerId: sale.seller ? sale.seller.id : sale.sellerId,
-        sellerName: sale.seller ? sale.seller.name : 'Vendedor Desconocido',
-        amount: numericAmount,
+        sellerName: sale.seller ? sale.seller.name : 'Desconocido',
         appliedPercentage,
         commission,
       };
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  async findSummariesBySeller(paginationDto: PaginationDto): Promise<{
+    data: any[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const { page = 1, limit = 10, search, where } = paginationDto;
+    const parsedWhere = this.parseWhere(where);
+
+    const queryBuilder = this.saleRepository
+      .createQueryBuilder('sale')
+      .leftJoinAndSelect('sale.seller', 'seller');
+
+    if (parsedWhere['startDate'] && parsedWhere['endDate']) {
+      queryBuilder.andWhere('sale.saleDate BETWEEN :startDate AND :endDate', {
+        startDate: parsedWhere['startDate'],
+        endDate: parsedWhere['endDate'],
+      });
+    }
+
+    if (search && search.trim()) {
+      queryBuilder.andWhere('seller.name LIKE :search', {
+        search: `%${search.trim()}%`,
+      });
+    }
+
+    const sales = await queryBuilder.getMany();
+    const rules = await this.ruleRepository.find({
+      order: { minAmount: 'DESC' },
     });
 
     const sellerMap = new Map<
@@ -71,7 +134,7 @@ export class CommissionService {
 
     for (const sale of sales) {
       const sellerId = sale.seller ? sale.seller.id : sale.sellerId;
-      const sellerName = sale.seller ? sale.seller.name : 'Vendedor Desconocido';
+      const sellerName = sale.seller ? sale.seller.name : 'Desconocido';
       const existing = sellerMap.get(sellerId) || {
         sellerId,
         sellerName,
@@ -81,19 +144,11 @@ export class CommissionService {
       sellerMap.set(sellerId, existing);
     }
 
-    const summaries: CommissionSellerSummaryDto[] = Array.from(
-      sellerMap.values(),
-    ).map((seller) => {
+    const allSummaries = Array.from(sellerMap.values()).map((seller) => {
       const totalSold = Number(seller.totalSold.toFixed(2));
-      const matchingRule = rules.find(
-        (rule) => totalSold >= Number(rule.minAmount),
-      );
-      const appliedPercentage = matchingRule
-        ? Number(matchingRule.percentage)
-        : 0;
-      const totalCommission = Number(
-        (totalSold * appliedPercentage).toFixed(2),
-      );
+      const matchingRule = rules.find((r) => totalSold >= Number(r.minAmount));
+      const appliedPercentage = matchingRule ? Number(matchingRule.percentage) : 0;
+      const totalCommission = Number((totalSold * appliedPercentage).toFixed(2));
 
       return {
         sellerId: seller.sellerId,
@@ -104,30 +159,79 @@ export class CommissionService {
       };
     });
 
-    const totalSalesAmount = Number(
-      detailedSales
-        .reduce((sum, item) => sum + item.amount, 0)
-        .toFixed(2),
-    );
-    const totalCommissionAmount = Number(
-      detailedSales
-        .reduce((sum, item) => sum + item.commission, 0)
-        .toFixed(2),
-    );
-
-    const metrics: CommissionMetricsDto = {
-      totalSalesAmount,
-      totalCommissionAmount,
-      totalSalesCount: detailedSales.length,
-      activeSellersCount: sellerMap.size,
-    };
+    const total = allSummaries.length;
+    const startIndex = (page - 1) * limit;
+    const data = allSummaries.slice(startIndex, startIndex + limit);
 
     return {
-      startDate,
-      endDate,
-      sales: detailedSales,
-      summaries,
-      metrics,
+      data,
+      total,
+      page,
+      limit,
     };
+  }
+
+  async getMetrics(where?: any): Promise<{
+    totalSalesAmount: number;
+    totalCommissionAmount: number;
+    totalSalesCount: number;
+    activeSellersCount: number;
+  }> {
+    const parsedWhere = this.parseWhere(where);
+
+    const queryBuilder = this.saleRepository
+      .createQueryBuilder('sale')
+      .leftJoinAndSelect('sale.seller', 'seller');
+
+    if (parsedWhere['startDate'] && parsedWhere['endDate']) {
+      queryBuilder.andWhere('sale.saleDate BETWEEN :startDate AND :endDate', {
+        startDate: parsedWhere['startDate'],
+        endDate: parsedWhere['endDate'],
+      });
+    }
+
+    if (parsedWhere['sellerId']) {
+      queryBuilder.andWhere('sale.sellerId = :sellerId', {
+        sellerId: parsedWhere['sellerId'],
+      });
+    }
+
+    const sales = await queryBuilder.getMany();
+    const rules = await this.ruleRepository.find({
+      order: { minAmount: 'DESC' },
+    });
+
+    let totalSalesAmount = 0;
+    let totalCommissionAmount = 0;
+    const sellerSet = new Set<string>();
+
+    for (const sale of sales) {
+      const amount = Number(sale.amount);
+      totalSalesAmount += amount;
+      sellerSet.add(sale.sellerId);
+
+      const matchingRule = rules.find((r) => amount >= Number(r.minAmount));
+      const appliedPercentage = matchingRule ? Number(matchingRule.percentage) : 0;
+      totalCommissionAmount += amount * appliedPercentage;
+    }
+
+    return {
+      totalSalesAmount: Number(totalSalesAmount.toFixed(2)),
+      totalCommissionAmount: Number(totalCommissionAmount.toFixed(2)),
+      totalSalesCount: sales.length,
+      activeSellersCount: sellerSet.size,
+    };
+  }
+
+  private parseWhere(where?: any): Record<string, any> {
+    if (!where) return {};
+    if (typeof where === 'string') {
+      try {
+        return JSON.parse(where);
+      } catch {
+        return {};
+      }
+    }
+    return where;
   }
 }

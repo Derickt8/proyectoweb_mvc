@@ -26,7 +26,7 @@
         <p class="calculator-subtitle">Gestión y cálculo de comisiones por ventas en base a rangos y reglas aplicadas.</p>
       </div>
 
-      <form [formGroup]="commissionDateFilterForm" (ngSubmit)="handleCalculateCommissions()" class="filter-form">
+      <form [formGroup]="commissionDateFilterForm" (ngSubmit)="executeSearchCommission()" class="filter-form">
         <div class="filter-group">
           <label for="startDate" class="filter-label">Fecha de Inicio:</label>
           <div class="input-with-icon">
@@ -158,9 +158,9 @@
                 </tr>
               </thead>
               <tbody>
-                @for (sale of paginatedSalesListCommission(); track sale.saleId) {
+                @for (sale of commissionSalesList(); track sale.id) {
                   <tr>
-                    <td class="font-mono text-xs text-muted">{{ sale.saleId }}</td>
+                    <td class="font-mono text-xs text-muted">{{ sale.id }}</td>
                     <td>{{ sale.saleDate | date:'dd/MM/yyyy' }}</td>
                     <td class="font-medium text-dark">{{ sale.sellerName }}</td>
                     <td class="text-right font-medium">{{ sale.amount | currency:'USD':'symbol':'1.2-2' }}</td>
@@ -183,12 +183,12 @@
               </tbody>
             </table>
 
-            @if (commissionSalesList().length > 0) {
+            @if (totalRecordsCommission() > 0) {
               <app-paginator-custom
-                [totalRecords]="totalSalesCountCommission()"
+                [totalRecords]="totalRecordsCommission()"
                 [pageSize]="pageSizeCommission()"
                 [pageIndex]="pageIndexCommission()"
-                [pageSizeOptions]="[5, 10, 20]"
+                [pageSizeOptions]="pageSizeOptionsCommission()"
                 (pageChange)="onPageChangeCommission($event)"
                 (pageSizeChange)="onPageSizeChangeCommission($event)"
               ></app-paginator-custom>
@@ -230,6 +230,17 @@
                 }
               </tbody>
             </table>
+
+            @if (totalSummaryRecordsCommission() > 0) {
+              <app-paginator-custom
+                [totalRecords]="totalSummaryRecordsCommission()"
+                [pageSize]="summaryPageSizeCommission()"
+                [pageIndex]="summaryPageIndexCommission()"
+                [pageSizeOptions]="pageSizeOptionsCommission()"
+                (pageChange)="onSummaryPageChangeCommission($event)"
+                (pageSizeChange)="onSummaryPageSizeChangeCommission($event)"
+              ></app-paginator-custom>
+            }
           </div>
         }
       </div>
