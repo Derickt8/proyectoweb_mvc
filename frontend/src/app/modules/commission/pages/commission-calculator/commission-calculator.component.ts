@@ -17,13 +17,12 @@ import {
   CommissionResponse,
   CommissionSummary,
   CommissionSummaryResponse,
+  CommissionTabType,
   Seller,
 } from '../../../../core/commission/commission.types';
 import { ButtonCustomType } from '../../../../core/utils/button-custom.type';
 import { ButtonCreateCustomComponent } from '@/custom-components/button-create-custom/button-create-custom.component';
 import { PaginatorComponent } from '@/custom-components/ui/paginator-custom/paginator.component';
-
-export type CommissionTabType = 'sales' | 'sellers';
 
 @Component({
   selector: 'app-commission-calculator',
@@ -45,7 +44,7 @@ export class CommissionCalculatorComponent implements OnInit {
   private readonly _commissionService = inject(CommissionService);
   private readonly _destroyRef = inject(DestroyRef);
 
-  readonly createButtonSaleConfig: ButtonCustomType = {
+  readonly createButtonCommissionConfig: ButtonCustomType = {
     title: 'Nueva Venta',
     icon: 'heroicons_outline:plus',
     class: 'btn-create-sale',
@@ -58,8 +57,8 @@ export class CommissionCalculatorComponent implements OnInit {
   };
 
   readonly isLoadingCommission = signal<boolean>(false);
-  readonly isSubmittingSaleCommission = signal<boolean>(false);
-  readonly isCreateSaleModalOpenCommission = signal<boolean>(false);
+  readonly isSubmittingCommission = signal<boolean>(false);
+  readonly isCreateModalOpenCommission = signal<boolean>(false);
   readonly selectedCommissionTab = signal<CommissionTabType>('sales');
 
   readonly commissionSalesList = signal<Commission[]>([]);
@@ -69,9 +68,9 @@ export class CommissionCalculatorComponent implements OnInit {
   readonly pageSizeOptionsCommission = signal<number[]>([10, 25, 50, 100]);
 
   readonly commissionSummaryList = signal<CommissionSummary[]>([]);
-  readonly summaryPageIndexCommission = signal<number>(1);
-  readonly summaryPageSizeCommission = signal<number>(10);
-  readonly totalSummaryRecordsCommission = signal<number>(0);
+  readonly pageIndexCommissionSummary = signal<number>(1);
+  readonly pageSizeCommissionSummary = signal<number>(10);
+  readonly totalRecordsCommissionSummary = signal<number>(0);
 
   readonly sellerListCommission = signal<Seller[]>([]);
 
@@ -80,7 +79,7 @@ export class CommissionCalculatorComponent implements OnInit {
     endDate: new FormControl<string>(''),
   });
 
-  readonly createSaleCommissionForm = new FormGroup({
+  readonly createCommissionForm = new FormGroup({
     sellerId: new FormControl<string>('', {
       nonNullable: true,
       validators: [Validators.required],
@@ -105,13 +104,13 @@ export class CommissionCalculatorComponent implements OnInit {
   }
 
   loadInitialDataCommission(): void {
-    this.loadSellers$()
+    this.loadCommissionSellers$()
       .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (sellers) => {
           this.sellerListCommission.set(sellers);
           if (sellers.length > 0) {
-            this.createSaleCommissionForm.controls.sellerId.setValue(sellers[0].id);
+            this.createCommissionForm.controls.sellerId.setValue(sellers[0].id);
           }
         },
       });
@@ -119,17 +118,7 @@ export class CommissionCalculatorComponent implements OnInit {
     this.executeSearchCommission();
   }
 
-  executeSearchCommission(): void {
-    this.pageIndexCommission.set(1);
-    this.summaryPageIndexCommission.set(1);
-    this.loadCommissions(this.pageIndexCommission(), this.pageSizeCommission());
-    this.loadSummariesBySeller(
-      this.summaryPageIndexCommission(),
-      this.summaryPageSizeCommission(),
-    );
-  }
-
-  loadCommissions(page: number, limit: number): void {
+  loadCommissionData(): void {
     this.isLoadingCommission.set(true);
     const filterValues = this.commissionDateFilterForm.getRawValue();
     const where: Record<string, unknown> = {};
@@ -138,7 +127,11 @@ export class CommissionCalculatorComponent implements OnInit {
       where['endDate'] = filterValues.endDate;
     }
 
-    this.loadCommissions$(page, limit, where)
+    this.loadCommissions$(
+      this.pageIndexCommission(),
+      this.pageSizeCommission(),
+      where,
+    )
       .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (response) => {
@@ -154,7 +147,7 @@ export class CommissionCalculatorComponent implements OnInit {
       });
   }
 
-  loadSummariesBySeller(page: number, limit: number): void {
+  loadCommissionSummaries(): void {
     const filterValues = this.commissionDateFilterForm.getRawValue();
     const where: Record<string, unknown> = {};
     if (filterValues.startDate && filterValues.endDate) {
@@ -162,18 +155,29 @@ export class CommissionCalculatorComponent implements OnInit {
       where['endDate'] = filterValues.endDate;
     }
 
-    this.loadSummaries$(page, limit, where)
+    this.loadCommissionSummaries$(
+      this.pageIndexCommissionSummary(),
+      this.pageSizeCommissionSummary(),
+      where,
+    )
       .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: (response) => {
           this.commissionSummaryList.set(response.data);
-          this.totalSummaryRecordsCommission.set(response.total);
+          this.totalRecordsCommissionSummary.set(response.total);
         },
         error: () => {
           this.commissionSummaryList.set([]);
-          this.totalSummaryRecordsCommission.set(0);
+          this.totalRecordsCommissionSummary.set(0);
         },
       });
+  }
+
+  executeSearchCommission(): void {
+    this.pageIndexCommission.set(1);
+    this.pageIndexCommissionSummary.set(1);
+    this.loadCommissionData();
+    this.loadCommissionSummaries();
   }
 
   setCommissionTab(tab: CommissionTabType): void {
@@ -182,58 +186,52 @@ export class CommissionCalculatorComponent implements OnInit {
 
   onPageChangeCommission(newPage: number): void {
     this.pageIndexCommission.set(newPage);
-    this.loadCommissions(this.pageIndexCommission(), this.pageSizeCommission());
+    this.loadCommissionData();
   }
 
   onPageSizeChangeCommission(newSize: number): void {
     this.pageSizeCommission.set(newSize);
     this.pageIndexCommission.set(1);
-    this.loadCommissions(this.pageIndexCommission(), this.pageSizeCommission());
+    this.loadCommissionData();
   }
 
-  onSummaryPageChangeCommission(newPage: number): void {
-    this.summaryPageIndexCommission.set(newPage);
-    this.loadSummariesBySeller(
-      this.summaryPageIndexCommission(),
-      this.summaryPageSizeCommission(),
-    );
+  onPageChangeCommissionSummary(newPage: number): void {
+    this.pageIndexCommissionSummary.set(newPage);
+    this.loadCommissionSummaries();
   }
 
-  onSummaryPageSizeChangeCommission(newSize: number): void {
-    this.summaryPageSizeCommission.set(newSize);
-    this.summaryPageIndexCommission.set(1);
-    this.loadSummariesBySeller(
-      this.summaryPageIndexCommission(),
-      this.summaryPageSizeCommission(),
-    );
+  onPageSizeChangeCommissionSummary(newSize: number): void {
+    this.pageSizeCommissionSummary.set(newSize);
+    this.pageIndexCommissionSummary.set(1);
+    this.loadCommissionSummaries();
   }
 
-  openCreateSaleModal(): void {
-    this.isCreateSaleModalOpenCommission.set(true);
+  openCreateCommissionModal(): void {
+    this.isCreateModalOpenCommission.set(true);
   }
 
-  closeCreateSaleModal(): void {
-    this.isCreateSaleModalOpenCommission.set(false);
+  closeCreateCommissionModal(): void {
+    this.isCreateModalOpenCommission.set(false);
   }
 
-  handleCreateSale(): void {
-    if (this.createSaleCommissionForm.invalid) {
+  handleCreateCommission(): void {
+    if (this.createCommissionForm.invalid) {
       return;
     }
 
-    this.isSubmittingSaleCommission.set(true);
-    const formValue = this.createSaleCommissionForm.getRawValue();
+    this.isSubmittingCommission.set(true);
+    const formValue = this.createCommissionForm.getRawValue();
 
-    this.createSale$(formValue as Partial<Commission>)
+    this.createCommission$(formValue as Partial<Commission>)
       .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe({
         next: () => {
-          this.isSubmittingSaleCommission.set(false);
-          this.closeCreateSaleModal();
+          this.isSubmittingCommission.set(false);
+          this.closeCreateCommissionModal();
           this.executeSearchCommission();
         },
         error: () => {
-          this.isSubmittingSaleCommission.set(false);
+          this.isSubmittingCommission.set(false);
         },
       });
   }
@@ -246,7 +244,7 @@ export class CommissionCalculatorComponent implements OnInit {
     return this._commissionService.findAll(page, limit, where);
   }
 
-  private loadSummaries$(
+  private loadCommissionSummaries$(
     page: number,
     limit: number,
     where: Record<string, unknown>,
@@ -254,11 +252,11 @@ export class CommissionCalculatorComponent implements OnInit {
     return this._commissionService.findSummariesBySeller(page, limit, where);
   }
 
-  private loadSellers$(): Observable<Seller[]> {
+  private loadCommissionSellers$(): Observable<Seller[]> {
     return this._commissionService.getSellers();
   }
 
-  private createSale$(
+  private createCommission$(
     data: Partial<Commission>,
   ): Observable<Commission> {
     return this._commissionService.createSale(data);
