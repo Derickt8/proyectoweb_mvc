@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   DestroyRef,
   inject,
   OnInit,
@@ -50,12 +49,6 @@ export class CommissionCalculatorComponent implements OnInit {
     class: 'btn-create-sale',
   };
 
-  readonly calculateButtonCommissionConfig: ButtonCustomType = {
-    title: 'Buscar Comisiones',
-    icon: 'heroicons_outline:magnifying-glass',
-    class: 'btn-calculate',
-  };
-
   readonly isLoadingCommission = signal<boolean>(false);
   readonly isSubmittingCommission = signal<boolean>(false);
   readonly isCreateModalOpenCommission = signal<boolean>(false);
@@ -92,12 +85,6 @@ export class CommissionCalculatorComponent implements OnInit {
       validators: [Validators.required, Validators.min(0.01)],
     }),
   });
-
-  readonly hasResultsCommission = computed(
-    () =>
-      this.totalRecordsCommission() > 0 ||
-      this.commissionSummaryList().length > 0,
-  );
 
   ngOnInit(): void {
     this.loadInitialDataCommission();

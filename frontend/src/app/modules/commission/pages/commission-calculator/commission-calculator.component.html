@@ -7,7 +7,8 @@
     <div class="header-actions">
       <app-button-create-custom
         [data]="createButtonCommissionConfig"
-        (buttonClick)="openCreateCommissionModal()">
+        (buttonClick)="openCreateCommissionModal()"
+      >
       </app-button-create-custom>
     </div>
   </div>
@@ -19,39 +20,34 @@
           type="button"
           class="tab-button"
           [class.active]="selectedCommissionTab() === 'sales'"
-          (click)="setCommissionTab('sales')">
+          (click)="setCommissionTab('sales')"
+        >
           Detalle por Venta
         </button>
         <button
           type="button"
           class="tab-button"
           [class.active]="selectedCommissionTab() === 'sellers'"
-          (click)="setCommissionTab('sellers')">
+          (click)="setCommissionTab('sellers')"
+        >
           Resumen por Vendedor
         </button>
       </div>
 
-      <form [formGroup]="commissionDateFilterForm" (ngSubmit)="executeSearchCommission()" class="filter-form">
+      <form
+        [formGroup]="commissionDateFilterForm"
+        (ngSubmit)="executeSearchCommission()"
+        class="filter-form"
+      >
         <div class="filter-item">
           <label for="startDateInput" class="filter-label">Desde:</label>
-          <input
-            type="date"
-            id="startDateInput"
-            formControlName="startDate"
-            class="input-date" />
+          <input type="date" id="startDateInput" formControlName="startDate" class="input-date" />
         </div>
         <div class="filter-item">
           <label for="endDateInput" class="filter-label">Hasta:</label>
-          <input
-            type="date"
-            id="endDateInput"
-            formControlName="endDate"
-            class="input-date" />
+          <input type="date" id="endDateInput" formControlName="endDate" class="input-date" />
         </div>
-        <button
-          type="submit"
-          class="btn-filter"
-          [disabled]="isLoadingCommission()">
+        <button type="submit" class="btn-filter" [disabled]="isLoadingCommission()">
           @if (isLoadingCommission()) {
             <span class="spinner"></span>
           }
@@ -87,16 +83,21 @@
               @for (sale of commissionSalesList(); track sale.id) {
                 <tr class="table-row">
                   <td class="col-id font-mono">{{ sale.id }}</td>
-                  <td class="col-date">{{ sale.saleDate | date:'dd/MM/yyyy' }}</td>
+                  <td class="col-date">{{ sale.saleDate | date: 'dd/MM/yyyy' }}</td>
                   <td class="col-seller font-semibold">{{ sale.sellerName }}</td>
-                  <td class="col-amount text-right font-medium">{{ sale.amount | currency:'USD':'symbol':'1.2-2' }}</td>
+                  <td class="col-amount text-right font-medium">
+                    {{ sale.amount | currency: 'USD' : 'symbol' : '1.2-2' }}
+                  </td>
                   <td class="col-percentage text-center">
-                    <span class="percentage-badge" [class.badge-active]="sale.appliedPercentage > 0">
-                      {{ sale.appliedPercentage | percent:'1.2-2' }}
+                    <span
+                      class="percentage-badge"
+                      [class.badge-active]="sale.appliedPercentage > 0"
+                    >
+                      {{ sale.appliedPercentage | percent: '1.2-2' }}
                     </span>
                   </td>
                   <td class="col-commission text-right font-bold commission-amount">
-                    {{ sale.commission | currency:'USD':'symbol':'1.2-2' }}
+                    {{ sale.commission | currency: 'USD' : 'symbol' : '1.2-2' }}
                   </td>
                 </tr>
               } @empty {
@@ -118,7 +119,8 @@
           [pageIndex]="pageIndexCommission()"
           [pageSizeOptions]="pageSizeOptionsCommission()"
           (pageChange)="onPageChangeCommission($event)"
-          (pageSizeChange)="onPageSizeChangeCommission($event)">
+          (pageSizeChange)="onPageSizeChangeCommission($event)"
+        >
         </app-paginator-custom>
       }
     }
@@ -138,14 +140,19 @@
             @for (summary of commissionSummaryList(); track summary.sellerId) {
               <tr class="table-row">
                 <td class="col-seller font-semibold">{{ summary.sellerName }}</td>
-                <td class="col-amount text-right font-medium">{{ summary.totalSold | currency:'USD':'symbol':'1.2-2' }}</td>
+                <td class="col-amount text-right font-medium">
+                  {{ summary.totalSold | currency: 'USD' : 'symbol' : '1.2-2' }}
+                </td>
                 <td class="col-percentage text-center">
-                  <span class="percentage-badge" [class.badge-active]="summary.appliedPercentage > 0">
-                    {{ summary.appliedPercentage | percent:'1.2-2' }}
+                  <span
+                    class="percentage-badge"
+                    [class.badge-active]="summary.appliedPercentage > 0"
+                  >
+                    {{ summary.appliedPercentage | percent: '1.2-2' }}
                   </span>
                 </td>
                 <td class="col-commission text-right font-bold commission-amount">
-                  {{ summary.totalCommission | currency:'USD':'symbol':'1.2-2' }}
+                  {{ summary.totalCommission | currency: 'USD' : 'symbol' : '1.2-2' }}
                 </td>
               </tr>
             } @empty {
@@ -166,7 +173,8 @@
           [pageIndex]="pageIndexCommissionSummary()"
           [pageSizeOptions]="pageSizeOptionsCommission()"
           (pageChange)="onPageChangeCommissionSummary($event)"
-          (pageSizeChange)="onPageSizeChangeCommissionSummary($event)">
+          (pageSizeChange)="onPageSizeChangeCommissionSummary($event)"
+        >
         </app-paginator-custom>
       }
     }
@@ -179,14 +187,28 @@
       <div class="modal-header">
         <h3 class="modal-title">Registrar Nueva Venta</h3>
         <button type="button" class="btn-close" (click)="closeCreateCommissionModal()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
       </div>
 
-      <form [formGroup]="createCommissionForm" (ngSubmit)="handleCreateCommission()" class="modal-form">
+      <form
+        [formGroup]="createCommissionForm"
+        (ngSubmit)="handleCreateCommission()"
+        class="modal-form"
+      >
         <div class="form-group">
           <label for="sellerSelect" class="form-label">Vendedor</label>
           <select id="sellerSelect" formControlName="sellerId" class="form-control">
@@ -198,11 +220,7 @@
 
         <div class="form-group">
           <label for="saleDateInput" class="form-label">Fecha de Venta</label>
-          <input
-            type="date"
-            id="saleDateInput"
-            formControlName="saleDate"
-            class="form-control" />
+          <input type="date" id="saleDateInput" formControlName="saleDate" class="form-control" />
         </div>
 
         <div class="form-group">
@@ -213,20 +231,19 @@
             step="0.01"
             placeholder="Ej. 705.00"
             formControlName="amount"
-            class="form-control" />
+            class="form-control"
+          />
         </div>
 
         <div class="modal-actions">
-          <button
-            type="button"
-            class="btn-secondary"
-            (click)="closeCreateCommissionModal()">
+          <button type="button" class="btn-secondary" (click)="closeCreateCommissionModal()">
             Cancelar
           </button>
           <button
             type="submit"
             class="btn-primary"
-            [disabled]="createCommissionForm.invalid || isSubmittingCommission()">
+            [disabled]="createCommissionForm.invalid || isSubmittingCommission()"
+          >
             @if (isSubmittingCommission()) {
               <span class="spinner"></span>
             }

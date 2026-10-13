@@ -20,10 +20,7 @@ export type Commission = {
   commission: number;
 };
 
-export type CommissionRow = Commission & {
-  recordNumber: number;
-  actions?: RowAction[];
-};
+
 
 export type CommissionResponse = PaginationResponse<Commission>;
 
@@ -33,11 +30,6 @@ export type CommissionSummary = {
   totalSold: number;
   appliedPercentage: number;
   totalCommission: number;
-};
-
-export type CommissionSummaryRow = CommissionSummary & {
-  recordNumber: number;
-  actions?: RowAction[];
 };
 
 export type CommissionSummaryResponse = PaginationResponse<CommissionSummary>;
